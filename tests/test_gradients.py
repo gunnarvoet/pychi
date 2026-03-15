@@ -63,3 +63,24 @@ def test_horizontal_gradient_negative():
     temp_chunk = np.array([15.0, 14.0, 13.0])
     dtdx = horizontal_gradient(temp_chunk, 600.0, 1.0)
     assert dtdx == pytest.approx(-2.0 / 600.0)
+
+
+from conftest import requires_matlab_fixtures
+
+
+@requires_matlab_fixtures
+def test_vertical_gradient_vs_matlab(gradient_fixture):
+    """vertical_gradient matches Matlab dtdz exactly."""
+    data = gradient_fixture
+    temp_cal = data["temp_cal_neighbors"]
+    depths = data["depths_neighbors"]
+    dtdz_matlab = float(data["dtdz"])
+    ii = int(data["ii"]) - 1  # Matlab 1-indexed to Python 0-indexed
+
+    if temp_cal.shape[0] == 2:
+        sensor_index = 0 if ii == 0 else 1
+    else:
+        sensor_index = 1
+
+    dtdz_mean, _ = vertical_gradient(temp_cal, depths, sensor_index)
+    assert dtdz_mean == pytest.approx(dtdz_matlab, rel=1e-12)

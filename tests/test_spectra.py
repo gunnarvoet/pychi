@@ -84,3 +84,23 @@ def test_welch_vs_csd_odas_comparison():
 
     ratio = np.mean(Pxx_odas[1:]) / np.mean(Pxx_welch[1:])
     assert 0.5 < ratio < 2.0
+
+
+from conftest import requires_matlab_fixtures
+
+
+@requires_matlab_fixtures
+def test_csd_odas_vs_matlab(spectra_fixture):
+    """csd_odas output matches Matlab csd_odas to ~1e-10 relative tolerance."""
+    data = spectra_fixture
+    temp_in = data["temp_in"]
+    Pt_matlab = data["Pt"]
+    f_matlab = data["f"]
+    n_fft = int(data["spectra_size"])
+    rate = float(data["sample_freq"])
+    win = data["win"]
+
+    Pxx, f = csd_odas(temp_in, n_fft, rate, window=win, detrend="linear")
+
+    np.testing.assert_allclose(f, f_matlab, rtol=1e-12)
+    np.testing.assert_allclose(Pxx, Pt_matlab, rtol=1e-10)

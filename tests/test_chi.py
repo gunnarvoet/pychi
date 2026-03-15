@@ -68,3 +68,25 @@ def test_calc_chi_spectral_slope_is_finite():
     _, diag = calc_chi(temperature, 0.3, 0.2, 2.5e-4, 0.01, 1.0, config)
 
     assert np.isfinite(diag["spectral_slope"])
+
+
+from conftest import requires_matlab_fixtures
+
+
+@requires_matlab_fixtures
+def test_calc_chi_vs_matlab(chi_fixture):
+    """calc_chi output matches Matlab chi value to ~1e-6 relative tolerance."""
+    data = chi_fixture
+    temp_in = data["temp_in"]
+    U = float(data["U_in"])
+    gamma = float(data["gamma"])
+    alpha = float(data["alpha_val"])
+    grad_T_mag = float(data["grad_T_mag"])
+    avrg_lim = data["avrg_lim"].tolist()
+    chi_matlab = float(data["chi_val"])
+
+    config = Config(spectra_size=128, avrg_lim=avrg_lim)
+
+    chi_val, _ = calc_chi(temp_in, U, gamma, alpha, grad_T_mag, 1.0, config)
+
+    np.testing.assert_allclose(chi_val, chi_matlab, rtol=1e-6)
