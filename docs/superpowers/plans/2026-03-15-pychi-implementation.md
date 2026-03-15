@@ -46,10 +46,6 @@
 - [ ] **Step 1: Create pyproject.toml**
 
 ```toml
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "pychi"
 version = "0.1.0"
@@ -63,14 +59,18 @@ dependencies = [
     "pyyaml",
 ]
 
-[project.optional-dependencies]
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "src"
+
+[dependency-groups]
 dev = [
     "pytest",
     "ruff",
 ]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/pychi"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -126,8 +126,7 @@ __all__ = [
 
 ```bash
 cd /Users/gunnar/Projects/claude/pychi
-uv venv
-uv pip install -e ".[dev]"
+uv sync
 ```
 
 - [ ] **Step 5: Verify import fails gracefully**
@@ -2225,8 +2224,7 @@ pychi is a Python port of a Matlab reference implementation. It computes χ from
 # Clone and install with uv
 git clone <repo-url>
 cd pychi
-uv venv
-uv pip install -e ".[dev]"
+uv sync
 ```
 
 ## Quick Start
