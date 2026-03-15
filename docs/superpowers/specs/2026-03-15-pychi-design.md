@@ -57,6 +57,9 @@ spectral:
   avrg_lim: [0.008, 0.1]  # Inertial subrange frequency bounds [Hz]
   chi_time_step: 600       # Chunk duration [seconds] (10 minutes)
 
+qc:
+  chi_spectra_bin_bounds: [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3]  # log10(chi) bin edges for spectral averaging
+
 physics:
   gamma: 0.2               # Mixing efficiency
   salinity: 35.0            # PSU (for thermal expansion coefficient)
@@ -136,7 +139,8 @@ Port of `Calc_Chi_TChain_2.m`. Computes chi for a single time chunk at a single 
   - `grad_T_mag`: total temperature gradient magnitude `sqrt(dtdz² + dtdx²)` — note this is the combined gradient, not just the vertical component. The Matlab code passes `sqrt(dtdz.^2+dtdx.^2)` as the `dtdz` argument (line 180) and takes `abs()` inside the function (line 49). We use the clearer name `grad_T_mag` to avoid confusion with the vertical gradient `dtdz`.
   - `sample_freq`: sampling frequency in Hz (inferred from data by the orchestrator)
   - `config`: `Config` object (provides `spectra_size`, `avrg_lim`)
-- **Returns:** `(chi_value, diagnostics)` where diagnostics is a dict with keys `Pt`, `f`, `U`, `mean_t`
+- **Returns:** `(chi_value, diagnostics)` where diagnostics is a dict with keys `Pt`, `f`, `U`, `mean_t`, `spectral_slope`
+  - `spectral_slope`: slope of linear fit to `log10(f)` vs `log10(Pt)` in the inertial subrange (frequencies within `avrg_lim`, extended to `avrg_lim[0] / 1.5` on the low end). A value near −5/3 indicates a good inertial subrange fit. Set to NaN if all spectral values in the band are zero. Matches Matlab lines 202–228.
 - **Window:** Hanning window normalized to unit RMS, passed to `csd_odas` with `detrend="linear"` (matching Matlab `Calc_Chi_TChain_2.m` line 10)
 - **Core formula** (Matlab line 51):
   ```
@@ -164,7 +168,9 @@ Orchestrator that loops over depths and time chunks.
   - `sensor_indices`: optional list of depth indices to process (default: all). For single-sensor mode, pass e.g. `[5]` — the function still uses neighboring sensors from `temp_cal` for gradient computation.
 - **Returns:** `xarray.Dataset` with:
   - **Coordinates:** `depth`, `time` (chunk center times)
-  - **Variables:** `chi`, `U`, `mean_u`, `mean_v`, `mean_w`, `dtdz`, `dtdx`, `alpha`, `gamma`, `unstab_prop`, `mean_t`, `mean_t_uncal`
+  - **Variables:** `chi`, `U`, `mean_u`, `mean_v`, `mean_w`, `dtdz`, `dtdx`, `alpha`, `gamma`, `unstab_prop`, `unstab_count`, `unstab_length`, `spectral_slope`, `mean_t`, `mean_t_uncal`, `avrg_lim_actual` (the possibly-adjusted low-frequency limit used for each chunk)
+  - **Coordinate:** `time_bnds` — chunk boundary times stored as a coordinate variable with dims `(time, 2)` for provenance
+  - **Per-chunk spectra:** `Pt` and `f` arrays from `calc_chi` are stored in the Dataset as variables with dims `(depth, time, frequency)`. This enables downstream spectral QC (binned averaging, slope analysis) without re-running the computation.
 - **Processing per chunk:**
   1. Find time indices for the chunk window
   2. Extract uncalibrated and calibrated temperature for the chunk
@@ -177,14 +183,16 @@ Orchestrator that loops over depths and time chunks.
   9. Adjust low-frequency limit: `avrg_lim[0] = max(avrg_lim[0], U_ref / hab)` where `hab = bottom_depth - depth`
   10. **NaN handling:** Skip chunk if the uncalibrated temperature contains any NaN values; set chi and gamma to NaN. Diagnostic variables (`mean_u`, `mean_v`, `mean_w`, `dtdz`, `dtdx`, `alpha`, `unstab_prop`, `mean_t`) are still computed and saved. For NaN-skipped chunks, `mean_u/v/w` use nearest ADCP depth bin (not interpolation) — this matches the Matlab behavior (lines 262–293) and is preserved intentionally so Python results can be compared directly against Matlab output. This matches Matlab line 166 which checks `length(temp_in) == length(temp_in(~isnan(temp_in)))` — i.e., the entire chunk is rejected if any sample is NaN, rather than removing NaN values and computing spectra on a non-contiguous series.
   11. Infer `sample_freq` from time coordinate spacing (computed once, not per chunk)
-  12. Call `calc_chi()` for valid chunks, passing `grad_T_mag = sqrt(dtdz² + dtdx²)`
-  13. Assemble results into output Dataset
+  12. Call `calc_chi()` for valid chunks, passing `grad_T_mag = sqrt(dtdz² + dtdx²)`. Store returned `Pt`, `f`, and `spectral_slope`.
+  13. After all chunks are processed, compute binned average spectra by grouping per-chunk spectra into `log10(chi)` bins (bin edges `−12:1:−3`) and averaging per depth. Matches Matlab lines 301–307.
+  14. Assemble results into output Dataset (primary) and binned spectra Dataset (secondary)
 
-**Intentionally omitted outputs** (can be recomputed from retained variables):
-- `unstab_count`, `unstab_length` — derivable from `unstab_prop` and chunk size
-
-**Deferred to future version:**
-- Spectral slope fitting and QC diagnostics (Matlab lines 202–228) — spectral slopes in the inertial subrange, binned spectra averaging for QC plots
+**Spectral QC — binned average spectra:**
+The Matlab code bins spectra by `log10(chi)` (bin edges `−12:1:−3`) and averages them per depth for QC plotting. The orchestrator computes this after the main loop: for each depth, each valid-chi chunk's spectrum `Pt` is assigned to a `log10(chi)` bin, and the mean spectrum per bin is stored. Output as a separate `xarray.Dataset` (or as a secondary return value) with:
+- `binned_spectra`: mean spectrum per bin, dims `(depth, chi_bin, frequency)`
+- `binned_counts`: number of spectra per bin, dims `(depth, chi_bin)`
+- `chi_bin_edges`: the log10(chi) bin boundaries
+- `frequency`: the frequency vector
 
 ## Testing Strategy
 
