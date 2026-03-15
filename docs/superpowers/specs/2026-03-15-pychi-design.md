@@ -154,7 +154,7 @@ Port of `Calc_Chi_TChain_2.m`. Computes chi for a single time chunk at a single 
   ```
   where `in_band` selects frequencies within `avrg_lim`, `g = 9.81`
 
-#### `process_chi(temp_uncal, temp_cal, u_velocity, v_velocity, depths, adcp_depths, config, sensor_indices=None)`
+#### `process_chi(temp_uncal, temp_cal, u_velocity, v_velocity, w_velocity, depths, adcp_depths, config, sensor_indices=None)`
 
 Orchestrator that loops over depths and time chunks.
 
