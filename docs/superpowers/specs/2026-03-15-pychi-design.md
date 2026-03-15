@@ -230,7 +230,7 @@ The script `scripts/export_matlab_fixtures.m` will:
    - `fixtures/chi_chunk_N.mat`: chi, alpha, gamma, U, grad_T_mag, dtdz, dtdx, unstab_prop, mean_t
    - `fixtures/pipeline_subset.mat`: full input/output arrays for end-to-end test
 3. Select chunks that cover edge cases: top sensor, bottom sensor, middle sensor; high/low chi; chunks with adjusted avrg_lim (where `U_ref/hab > avrg_lim[0]`); chunks with NaN values
-4. Note on data variable names: L1 (uncalibrated) files use variable `t`, L2 (calibrated) files use `__xarray_dataarray_variable__`
+4. Note on data variable names: Both L1 (uncalibrated) and L2 (calibrated) files use variable `__xarray_dataarray_variable__`
 
 ## Open Questions
 

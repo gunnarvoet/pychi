@@ -99,6 +99,7 @@ physics:
   latitude: 54.25           # Degrees N (for pressure calculation)
   bottom_depth: 1466.0      # Meters (for height-above-bottom)
   U_ref: 0.1               # Representative velocity [m/s] (for u/h low-freq cutoff)
+  gradient_mode: "full"     # "full" = sqrt(dtdz^2 + dtdx^2), "vertical" = |dtdz| only
 ```
 
 - [ ] **Step 3: Create __init__.py**
@@ -175,6 +176,7 @@ def test_config_defaults():
     assert cfg.latitude == pytest.approx(54.25)
     assert cfg.bottom_depth == pytest.approx(1466.0)
     assert cfg.U_ref == pytest.approx(0.1)
+    assert cfg.gradient_mode == "full"
     assert cfg.chi_spectra_bin_bounds == [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3]
 
 
@@ -250,6 +252,7 @@ class Config:
     latitude: float = 54.25
     bottom_depth: float = 1466.0
     U_ref: float = 0.1
+    gradient_mode: str = "full"  # "full" = sqrt(dtdz^2 + dtdx^2), "vertical" = |dtdz|
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> Config:
@@ -274,7 +277,7 @@ class Config:
                 if key in raw["qc"]:
                     kwargs[key] = raw["qc"][key]
         if "physics" in raw:
-            for key in ("gamma", "salinity", "latitude", "bottom_depth", "U_ref"):
+            for key in ("gamma", "salinity", "latitude", "bottom_depth", "U_ref", "gradient_mode"):
                 if key in raw["physics"]:
                     kwargs[key] = raw["physics"][key]
 
@@ -1077,10 +1080,9 @@ def calc_chi(
     alpha : float
         Thermal expansion coefficient [1/°C].
     grad_T_mag : float
-        Total temperature gradient magnitude sqrt(dtdz^2 + dtdx^2).
-        Named grad_T_mag (not dtdz) to avoid confusion with the vertical
-        gradient. The Matlab code passes sqrt(dtdz^2 + dtdx^2) as the
-        dtdz argument (line 180) and takes abs() inside (line 49).
+        Temperature gradient magnitude used in the chi formula.
+        When gradient_mode="full": sqrt(dtdz^2 + dtdx^2) (default, matches Matlab).
+        When gradient_mode="vertical": |dtdz| only.
     sample_freq : float
         Sampling frequency in Hz.
     config : Config
@@ -1414,10 +1416,14 @@ def process_chi(
     t_start = float(times_numeric[0])
     t_end = float(times_numeric[-1])
     chunk_step = config.chi_time_step
-    time_bnds_list = np.arange(t_start, t_end, chunk_step)
+    # Include endpoint: t_end is the last sample time, so the data extends
+    # to t_end + dt. Adding dt ensures np.arange includes the final boundary,
+    # matching Matlab's colon operator (start:step:end) which is endpoint-
+    # inclusive.
+    time_bnds_list = np.arange(t_start, t_end + dt, chunk_step)
     n_chunks = len(time_bnds_list) - 1
     if n_chunks < 1:
-        time_bnds_list = np.array([t_start, t_end])
+        time_bnds_list = np.array([t_start, t_end + dt])
         n_chunks = 1
 
     # Chunk center times and boundary pairs (numeric seconds)
@@ -1571,7 +1577,10 @@ def process_chi(
                     chi_spectra_bin_bounds=config.chi_spectra_bin_bounds,
                 )
 
-                grad_T_mag = np.sqrt(dtdz_mean**2 + dtdx_val**2)
+                if config.gradient_mode == "full":
+                    grad_T_mag = np.sqrt(dtdz_mean**2 + dtdx_val**2)
+                else:
+                    grad_T_mag = abs(dtdz_mean)
 
                 chi_val, diag = calc_chi(
                     temp_uncal_chunk, U_val, config.gamma, alpha_val,

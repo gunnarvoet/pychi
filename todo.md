@@ -1,0 +1,2 @@
+- figure out where to use L1 and if we need it at all. keep for comparison with Matlab.
+- maybe write a second package once the comparison with Matlab succeeds.
