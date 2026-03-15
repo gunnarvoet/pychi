@@ -82,7 +82,7 @@ Faithful port of the Matlab `csd_odas.m` function. Auto-spectrum mode only — t
   - `x`: 1D array of temperature values (must be NaN-free; see NaN handling note below)
   - `n_fft`: FFT segment length (default 128)
   - `rate`: sampling frequency in Hz
-  - `window`: 1D array of length `n_fft`, or `None`. If `None`, a Hanning window normalized to unit RMS (`window / sqrt(mean(window**2))`) is generated internally, matching the Matlab `csd_odas.m` default behavior (lines 131–134). If provided, the window is used as-is — the caller is responsible for normalization.
+  - `window`: 1D array of length `n_fft`, or `None`. If `None`, a Hanning window normalized to unit RMS (`window / sqrt(mean(window**2))`) is generated internally, matching the Matlab `csd_odas.m` default behavior (lines 131–134). Note: the Matlab code calls this a "cosine window" and generates it as `1 + cos(pi*(-1 + 2*k/N))` — this is mathematically identical to the Hann (Hanning) window. In Python, `numpy.hanning(n)` or `scipy.signal.windows.hann(n)` produce the same window. The implementation should include a comment documenting this equivalence. If provided, the window is used as-is — the caller is responsible for normalization.
   - `overlap`: number of overlapping points between segments (default `n_fft // 2`)
   - `detrend`: one of `"none"`, `"constant"`, `"linear"`, `"parabolic"`, `"cubic"` (default `"none"`, matching the Matlab function's default when the 7th argument is omitted). Note: the chi pipeline caller passes `"linear"` explicitly, matching Matlab `Calc_Chi_TChain_2.m` line 10.
 - **Returns:** `(Pxx, f)` — power spectrum and frequency vector
@@ -175,7 +175,7 @@ Orchestrator that loops over depths and time chunks.
   7. Compute instability proportion (fraction of timesteps where dT/dz > 0)
   8. Compute thermal expansion coefficient via `gsw.alpha()`
   9. Adjust low-frequency limit: `avrg_lim[0] = max(avrg_lim[0], U_ref / hab)` where `hab = bottom_depth - depth`
-  10. **NaN handling:** Skip chunk if the uncalibrated temperature contains any NaN values; set chi to NaN. This matches Matlab line 166 which checks `length(temp_in) == length(temp_in(~isnan(temp_in)))` — i.e., the entire chunk is rejected if any sample is NaN, rather than removing NaN values and computing spectra on a non-contiguous series.
+  10. **NaN handling:** Skip chunk if the uncalibrated temperature contains any NaN values; set chi and gamma to NaN. Diagnostic variables (`mean_u`, `mean_v`, `mean_w`, `dtdz`, `dtdx`, `alpha`, `unstab_prop`, `mean_t`) are still computed and saved. For NaN-skipped chunks, `mean_u/v/w` use nearest ADCP depth bin (not interpolation) — this matches the Matlab behavior (lines 262–293) and is preserved intentionally so Python results can be compared directly against Matlab output. This matches Matlab line 166 which checks `length(temp_in) == length(temp_in(~isnan(temp_in)))` — i.e., the entire chunk is rejected if any sample is NaN, rather than removing NaN values and computing spectra on a non-contiguous series.
   11. Infer `sample_freq` from time coordinate spacing (computed once, not per chunk)
   12. Call `calc_chi()` for valid chunks, passing `grad_T_mag = sqrt(dtdz² + dtdx²)`
   13. Assemble results into output Dataset
