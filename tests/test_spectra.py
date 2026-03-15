@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pychi.spectra import csd_odas
+from pychi.spectra import csd_odas, welch_spectrum
 
 
 def test_csd_odas_variance_preservation():
@@ -52,3 +52,35 @@ def test_csd_odas_input_too_short():
     x = np.ones(100)
     with pytest.raises(ValueError, match="twice"):
         csd_odas(x, n_fft=128, rate=1.0)
+
+
+def test_welch_spectrum_variance_preservation():
+    """welch_spectrum integral from 0 to Nyquist approximates signal variance."""
+    rng = np.random.default_rng(42)
+    n = 1024
+    rate = 1.0
+    x = rng.standard_normal(n)
+    n_fft = 128
+
+    Pxx, f = welch_spectrum(x, n_fft, rate)
+
+    spectral_variance = np.trapezoid(Pxx, f)
+    signal_variance = np.var(x, ddof=0)
+    assert spectral_variance == pytest.approx(signal_variance, rel=0.15)
+
+
+def test_welch_vs_csd_odas_comparison():
+    """welch_spectrum and csd_odas produce similar results."""
+    rng = np.random.default_rng(99)
+    n = 2048
+    rate = 1.0
+    x = rng.standard_normal(n)
+    n_fft = 128
+
+    Pxx_odas, f_odas = csd_odas(x, n_fft, rate, detrend="linear")
+    Pxx_welch, f_welch = welch_spectrum(x, n_fft, rate)
+
+    np.testing.assert_allclose(f_odas, f_welch, atol=1e-12)
+
+    ratio = np.mean(Pxx_odas[1:]) / np.mean(Pxx_welch[1:])
+    assert 0.5 < ratio < 2.0
