@@ -1,0 +1,32 @@
+[project]
+name = "pychi"
+version = "0.1.0"
+description = "Estimate turbulent temperature variance dissipation rate (chi) from oceanographic moored time series"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "xarray",
+    "gsw",
+    "pyyaml",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "src"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+src = ["src"]
+line-length = 88

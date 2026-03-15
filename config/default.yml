@@ -1,0 +1,15 @@
+spectral:
+  spectra_size: 128        # FFT segment length (2^7)
+  avrg_lim: [0.008, 0.1]  # Inertial subrange frequency bounds [Hz]
+  chi_time_step: 600       # Chunk duration [seconds] (10 minutes)
+
+qc:
+  chi_spectra_bin_bounds: [-12, -11, -10, -9, -8, -7, -6, -5, -4, -3]
+
+physics:
+  gamma: 0.2               # Mixing efficiency
+  salinity: 35.0            # PSU (for thermal expansion coefficient)
+  latitude: 54.25           # Degrees N (for pressure calculation)
+  bottom_depth: 1466.0      # Meters (for height-above-bottom)
+  U_ref: 0.1               # Representative velocity [m/s] (for u/h low-freq cutoff)
+  gradient_mode: "full"     # "full" = sqrt(dtdz^2 + dtdx^2), "vertical" = |dtdz| only
