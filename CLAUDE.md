@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pychi** — a Python package (not yet written) to estimate the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. The reference implementation is in Matlab under `matlab_version/`.
+**pychi** — a Python package to estimate the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. The reference Matlab implementation is under `matlab_version/`.
+
+## Commands
+
+```bash
+uv sync                  # Install dependencies (including dev group)
+uv run pytest            # Run all tests
+uv run pytest -x         # Stop on first failure
+uv run ruff check .      # Lint
+uv run ruff format .     # Format
+```
 
 ## Running the Matlab Code
 
@@ -47,12 +57,24 @@ A standalone spectral estimation function (replaces deprecated Matlab `csd`). Su
 
 ## Python Package Development
 
-When building the Python equivalent:
-- Use `xarray` and `netCDF4` for NetCDF I/O
-- Use `scipy.signal` for spectral estimation (replaces `csd_odas`)
-- Use `gsw` (TEOS-10) for seawater properties (replaces `sw_alpha`, `sw_pres`)
-- Use `numpy` for array operations (replaces Matlab vectorized math)
-- The core χ calculation in `Calc_Chi_TChain_2.m` line 51 is the key formula to port accurately
+### Module Structure (`src/pychi/`)
+- `config.py` — loads `config/default.yml`; exposes `Config` dataclass with spectral, physics, and QC parameters
+- `spectra.py` — `csd_odas()` (Matlab-compatible spectral estimation) and `welch_spectrum()`
+- `gradients.py` — `vertical_gradient()` (centered differences) and `horizontal_gradient()` (frozen-field via U)
+- `chi.py` — `calc_chi()` (single-chunk χ estimate) and `process_chi()` (full pipeline over depths × time windows)
+
+### Key Libraries (Matlab → Python)
+- `csd_odas.m` → `scipy.signal` (via `spectra.py`)
+- `sw_alpha`, `sw_pres` → `gsw` (TEOS-10)
+- NetCDF I/O → `xarray`
+
+### Configuration
+Tunable parameters live in `config/default.yml` (spectral settings, physics constants, QC bin bounds). Override by passing a custom YAML path to `Config`.
+
+## Code Style
+
+- Linter/formatter: `ruff` (line-length 88)
+- No type annotations convention enforced yet
 
 ## Testing Strategy
 
