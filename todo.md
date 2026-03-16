@@ -1,2 +1,1 @@
-- figure out where to use L1 and if we need it at all. keep for comparison with Matlab.
-- maybe write a second package once the comparison with Matlab succeeds.
+- figure out where to use L1 and if we need it at all. it may be better for the spectral calculation? but level 2 only removes an offset and a very slow trend, nothing to worry about when computing a spectrum over a short time frame.
