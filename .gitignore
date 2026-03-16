@@ -5,7 +5,8 @@ dist/
 build/
 .venv/
 # Matlab output files (not test fixtures)
-Chi_Calc_For_Gunnar/*.mat
+matlab_version/*.mat
+matlab_version/Spectra_Plots/
 # Keep test fixtures tracked
 !tests/fixtures/*.mat
 .ruff_cache/

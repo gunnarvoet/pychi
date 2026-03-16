@@ -309,7 +309,7 @@ git commit -m "feat: add Config dataclass with YAML loading and Matlab defaults"
 - Create: `src/pychi/spectra.py`
 - Create: `tests/test_spectra.py`
 
-**Reference:** `Chi_Calc_For_Gunnar/csd_odas.m` — the Matlab function we are porting. Only the auto-spectrum path is needed (the `y` parameter is dropped). The function segments the input, optionally detrends each segment with a polynomial, applies a window, computes FFT, averages `|FFT|^2` across segments, and normalizes so the integral from 0 to Nyquist equals signal variance.
+**Reference:** `matlab_version/csd_odas.m` — the Matlab function we are porting. Only the auto-spectrum path is needed (the `y` parameter is dropped). The function segments the input, optionally detrends each segment with a polynomial, applies a window, computes FFT, averages `|FFT|^2` across segments, and normalizes so the integral from 0 to Nyquist equals signal variance.
 
 - [ ] **Step 1: Write failing test — known variance signal**
 
@@ -946,7 +946,7 @@ git commit -m "feat: add horizontal_gradient (frozen-field dT/dx)"
 - Create: `src/pychi/chi.py`
 - Create: `tests/test_chi.py`
 
-**Reference:** `Chi_Calc_For_Gunnar/Calc_Chi_TChain_2.m` — the core chi formula on line 51, and spectral slope fitting from lines 202–228 of the main script.
+**Reference:** `matlab_version/Calc_Chi_TChain_2.m` — the core chi formula on line 51, and spectral slope fitting from lines 202–228 of the main script.
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1781,7 +1781,7 @@ Create `scripts/export_matlab_fixtures.m`:
 % Generates test fixtures for pychi by running the Matlab chi pipeline
 % on a small data subset and saving intermediate results at each stage.
 %
-% Run from the Chi_Calc_For_Gunnar/ directory after pointing paths to data.
+% Run from the matlab_version/ directory after pointing paths to data.
 % Saves .mat files to ../tests/fixtures/
 
 output_dir = '../tests/fixtures';
@@ -2338,7 +2338,7 @@ Tests validate Python output against Matlab reference data:
 uv run pytest -v
 ```
 
-To generate Matlab test fixtures, run `scripts/export_matlab_fixtures.m` in Matlab from the `Chi_Calc_For_Gunnar/` directory. This saves intermediate results (spectra, gradients, chi values) to `tests/fixtures/`.
+To generate Matlab test fixtures, run `scripts/export_matlab_fixtures.m` in Matlab from the `matlab_version/` directory. This saves intermediate results (spectra, gradients, chi values) to `tests/fixtures/`.
 
 ## Dependencies
 
@@ -2411,7 +2411,7 @@ dist/
 build/
 .venv/
 # Matlab output files (not test fixtures)
-Chi_Calc_For_Gunnar/*.mat
+matlab_version/*.mat
 # Keep test fixtures tracked
 !tests/fixtures/*.mat
 .ruff_cache/

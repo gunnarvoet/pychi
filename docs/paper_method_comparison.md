@@ -6,7 +6,7 @@ Comparison between the χ estimation method described in **Naveira Garabato et a
 
 ## Overview
 
-The paper describes mooring-based estimates of the temperature variance dissipation rate $\chi$ from 83 fast-sampling (1 Hz) thermistors deployed in a continental-slope canyon in the Rockall Trough. The Matlab code in `Chi_Calc_For_Gunnar/` implements this method. The pychi plan ports that Matlab code to Python.
+The paper describes mooring-based estimates of the temperature variance dissipation rate $\chi$ from 83 fast-sampling (1 Hz) thermistors deployed in a continental-slope canyon in the Rockall Trough. The Matlab code in `matlab_version/` implements this method. The pychi plan ports that Matlab code to Python.
 
 **Bottom line:** The plan faithfully captures the method described in the paper. There are a few nuances worth noting, detailed below.
 

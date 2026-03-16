@@ -3,7 +3,7 @@
 % Generates test fixtures for pychi by running the Matlab chi pipeline
 % on a small data subset and saving intermediate results at each stage.
 %
-% Run from the Chi_Calc_For_Gunnar/ directory after pointing paths to data.
+% Run from the matlab_version/ directory after pointing paths to data.
 % Saves .mat files to ../tests/fixtures/
 
 output_dir = '../tests/fixtures';

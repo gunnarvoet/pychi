@@ -5,7 +5,7 @@
 
 ## Overview
 
-pychi is a Python package that estimates the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. It is a port of the Matlab reference implementation in `Chi_Calc_For_Gunnar/`.
+pychi is a Python package that estimates the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. It is a port of the Matlab reference implementation in `matlab_version/`.
 
 ## Design Decisions
 

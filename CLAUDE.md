@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**pychi** — a Python package (not yet written) to estimate the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. The reference implementation is in Matlab under `Chi_Calc_For_Gunnar/`.
+**pychi** — a Python package (not yet written) to estimate the turbulent temperature variance dissipation rate (chi, χ) from oceanographic moored time series. The reference implementation is in Matlab under `matlab_version/`.
 
 ## Running the Matlab Code
 
@@ -15,7 +15,7 @@ Required data (not in repo):
 - T-chain uncalibrated: `mavs2_l1/mavs2_YYYYMMDD.nc` (variables: time, depth, `__xarray_dataarray_variable__`)
 - T-chain calibrated: `mavs2_l2/mavs2_YYYYMMDD.nc` (variables: time, depth, `__xarray_dataarray_variable__`)
 
-Run in Matlab from the `Chi_Calc_For_Gunnar/` directory after pointing paths to data.
+Run in Matlab from the `matlab_version/` directory after pointing paths to data.
 
 ## Matlab Code Architecture
 

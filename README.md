@@ -135,7 +135,7 @@ Tests validate Python output against Matlab reference data:
 uv run pytest -v
 ```
 
-To generate Matlab test fixtures, run `scripts/export_matlab_fixtures.m` in Matlab from the `Chi_Calc_For_Gunnar/` directory. This saves intermediate results (spectra, gradients, chi values) to `tests/fixtures/`.
+To generate Matlab test fixtures, run `scripts/export_matlab_fixtures.m` in Matlab from the `matlab_version/` directory. This saves intermediate results (spectra, gradients, chi values) to `tests/fixtures/`.
 
 ## Dependencies
 
