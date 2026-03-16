@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+# Matlab output files (not test fixtures)
+Chi_Calc_For_Gunnar/*.mat
+# Keep test fixtures tracked
+!tests/fixtures/*.mat
+.ruff_cache/
