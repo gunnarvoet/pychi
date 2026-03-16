@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-import numpy as np
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -23,6 +22,7 @@ requires_matlab_fixtures = pytest.mark.skipif(
 def spectra_fixture():
     """Load a spectral fixture."""
     from scipy.io import loadmat
+
     path = FIXTURES_DIR / "spectra_chunk_1.mat"
     return loadmat(path, squeeze_me=True)
 
@@ -31,6 +31,7 @@ def spectra_fixture():
 def gradient_fixture():
     """Load a gradient fixture."""
     from scipy.io import loadmat
+
     path = FIXTURES_DIR / "gradient_chunk_3.mat"
     return loadmat(path, squeeze_me=True)
 
@@ -39,6 +40,7 @@ def gradient_fixture():
 def chi_fixture():
     """Load a chi fixture."""
     from scipy.io import loadmat
+
     path = FIXTURES_DIR / "chi_chunk_1.mat"
     return loadmat(path, squeeze_me=True)
 
@@ -47,5 +49,6 @@ def chi_fixture():
 def pipeline_fixture():
     """Load end-to-end pipeline fixture."""
     from scipy.io import loadmat
+
     path = FIXTURES_DIR / "pipeline_subset.mat"
     return loadmat(path, squeeze_me=True)

@@ -3,6 +3,8 @@ import pytest
 
 from pychi.spectra import csd_odas, welch_spectrum
 
+from conftest import requires_matlab_fixtures
+
 
 def test_csd_odas_variance_preservation():
     """Integral of auto-spectrum from 0 to Nyquist equals signal variance."""
@@ -84,9 +86,6 @@ def test_welch_vs_csd_odas_comparison():
 
     ratio = np.mean(Pxx_odas[1:]) / np.mean(Pxx_welch[1:])
     assert 0.5 < ratio < 2.0
-
-
-from conftest import requires_matlab_fixtures
 
 
 @requires_matlab_fixtures

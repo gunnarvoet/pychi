@@ -4,6 +4,8 @@ import pytest
 from pychi.chi import calc_chi
 from pychi.config import Config
 
+from conftest import requires_matlab_fixtures
+
 
 def test_calc_chi_returns_positive_value():
     """calc_chi returns a positive chi value for a realistic synthetic signal."""
@@ -16,7 +18,9 @@ def test_calc_chi_returns_positive_value():
     sample_freq = 1.0
     config = Config()
 
-    chi_val, diag = calc_chi(temperature, U, gamma, alpha, grad_T_mag, sample_freq, config)
+    chi_val, diag = calc_chi(
+        temperature, U, gamma, alpha, grad_T_mag, sample_freq, config
+    )
 
     assert chi_val > 0
     assert np.isfinite(chi_val)
@@ -68,9 +72,6 @@ def test_calc_chi_spectral_slope_is_finite():
     _, diag = calc_chi(temperature, 0.3, 0.2, 2.5e-4, 0.01, 1.0, config)
 
     assert np.isfinite(diag["spectral_slope"])
-
-
-from conftest import requires_matlab_fixtures
 
 
 @requires_matlab_fixtures

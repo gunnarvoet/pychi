@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.signal import welch as _scipy_welch
+from scipy.signal.windows import hann
 
 
 def csd_odas(
@@ -64,7 +66,9 @@ def csd_odas(
     else:
         window = np.asarray(window, dtype=float).ravel()
         if len(window) != n_fft:
-            raise ValueError(f"Window length ({len(window)}) must equal n_fft ({n_fft})")
+            raise ValueError(
+                f"Window length ({len(window)}) must equal n_fft ({n_fft})"
+            )
 
     # Detrend order
     detrend_orders = {
@@ -112,10 +116,6 @@ def csd_odas(
     Pxx = Pxx / num_segments / (n_fft * rate / 2)
 
     return Pxx, f
-
-
-from scipy.signal import welch as _scipy_welch
-from scipy.signal.windows import hann
 
 
 def welch_spectrum(
