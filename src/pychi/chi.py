@@ -56,9 +56,19 @@ def calc_chi(
     """
     n_fft = config.spectra_size
 
+    # Match Matlab Calc_Chi_TChain_2.m: hanning(N) normalized to unit RMS.
+    # Matlab's hanning(N) = 0.5*(1 - cos(2*pi*n/(N+1))), n=1..N
+    # (no zero endpoints, unlike scipy's hann).
+    win = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(1, n_fft + 1) / (n_fft + 1)))
+    win = win / np.sqrt(np.mean(win**2))
+
     Pt, f = csd_odas(
-        temperature, n_fft, sample_freq,
-        window=None, overlap=n_fft // 2, detrend="linear",
+        temperature,
+        n_fft,
+        sample_freq,
+        window=win,
+        overlap=n_fft // 2,
+        detrend="linear",
     )
 
     # Scale spectrum by f^(5/3) to flatten inertial subrange
@@ -229,7 +239,9 @@ def process_chi(
 
             t_mask = (times_numeric >= t_lo) & (times_numeric < t_hi)
             if np.issubdtype(adcp_times.dtype, np.datetime64):
-                adcp_numeric = (adcp_times - (t0 if t0 is not None else adcp_times[0])) / np.timedelta64(1, "s")
+                adcp_numeric = (
+                    adcp_times - (t0 if t0 is not None else adcp_times[0])
+                ) / np.timedelta64(1, "s")
             else:
                 adcp_numeric = adcp_times.astype(float)
             adcp_t_mask = (adcp_numeric >= t_lo) & (adcp_numeric < t_hi)
@@ -295,9 +307,15 @@ def process_chi(
                 mean_u_profile = np.nanmean(u_chunk, axis=0)
                 mean_v_profile = np.nanmean(v_chunk, axis=0)
                 mean_w_profile = np.nanmean(w_chunk, axis=0)
-                mean_u_arr[di, jj] = float(np.interp(depth_val, adcp_depths, mean_u_profile))
-                mean_v_arr[di, jj] = float(np.interp(depth_val, adcp_depths, mean_v_profile))
-                mean_w_arr[di, jj] = float(np.interp(depth_val, adcp_depths, mean_w_profile))
+                mean_u_arr[di, jj] = float(
+                    np.interp(depth_val, adcp_depths, mean_u_profile)
+                )
+                mean_v_arr[di, jj] = float(
+                    np.interp(depth_val, adcp_depths, mean_v_profile)
+                )
+                mean_w_arr[di, jj] = float(
+                    np.interp(depth_val, adcp_depths, mean_w_profile)
+                )
 
                 chunk_config = Config(
                     spectra_size=config.spectra_size,
@@ -317,8 +335,13 @@ def process_chi(
                     grad_T_mag = abs(dtdz_mean)
 
                 chi_val, diag = calc_chi(
-                    temp_uncal_chunk, U_val, config.gamma, alpha_val,
-                    grad_T_mag, sample_freq, chunk_config,
+                    temp_uncal_chunk,
+                    U_val,
+                    config.gamma,
+                    alpha_val,
+                    grad_T_mag,
+                    sample_freq,
+                    chunk_config,
                 )
 
                 chi_arr[di, jj] = chi_val

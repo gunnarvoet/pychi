@@ -37,7 +37,7 @@ ADCP.w = ADCP.w_tmp;
 
 %% Load T-chain (uncalibrated L1)
 path_l1 = './mavs2_l1';
-file_dates = datenum(2021,7,6):2:datenum(2021,7,8);  % Small subset: 2 files
+file_dates = datenum(2021,7,10):2:datenum(2021,7,12);  % Small subset: 2 files
 TChain.temp = []; TChain.time = [];
 for ii = 1:length(file_dates)
     filename = [path_l1, '/mavs2_', datestr(file_dates(ii),'yyyymmdd'), '.nc'];

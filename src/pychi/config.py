@@ -6,7 +6,9 @@ from pathlib import Path
 import yaml
 
 
-_DEFAULT_CONFIG = Path(__file__).resolve().parent.parent.parent / "config" / "default.yml"
+_DEFAULT_CONFIG = (
+    Path(__file__).resolve().parent.parent.parent / "config" / "default.yml"
+)
 
 
 @dataclass
@@ -57,7 +59,14 @@ class Config:
                 if key in raw["qc"]:
                     kwargs[key] = raw["qc"][key]
         if "physics" in raw:
-            for key in ("gamma", "salinity", "latitude", "bottom_depth", "U_ref", "gradient_mode"):
+            for key in (
+                "gamma",
+                "salinity",
+                "latitude",
+                "bottom_depth",
+                "U_ref",
+                "gradient_mode",
+            ):
                 if key in raw["physics"]:
                     kwargs[key] = raw["physics"][key]
 

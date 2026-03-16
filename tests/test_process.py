@@ -17,11 +17,13 @@ def _make_synthetic_data(n_depths=3, n_times=1200, rate=1.0):
     temp_cal = temp_uncal + 0.5
 
     temp_uncal_da = xr.DataArray(
-        temp_uncal, dims=["depth", "time"],
+        temp_uncal,
+        dims=["depth", "time"],
         coords={"depth": depths, "time": times},
     )
     temp_cal_da = xr.DataArray(
-        temp_cal, dims=["depth", "time"],
+        temp_cal,
+        dims=["depth", "time"],
         coords={"depth": depths, "time": times},
     )
 
@@ -33,9 +35,15 @@ def _make_synthetic_data(n_depths=3, n_times=1200, rate=1.0):
     v_vel = 0.1 + 0.02 * rng.standard_normal((n_times, n_adcp_z))
     w_vel = 0.01 * rng.standard_normal((n_times, n_adcp_z))
 
-    u_da = xr.DataArray(u_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths})
-    v_da = xr.DataArray(v_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths})
-    w_da = xr.DataArray(w_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths})
+    u_da = xr.DataArray(
+        u_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths}
+    )
+    v_da = xr.DataArray(
+        v_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths}
+    )
+    w_da = xr.DataArray(
+        w_vel, dims=["time", "z"], coords={"time": adcp_times, "z": adcp_depths}
+    )
 
     return temp_uncal_da, temp_cal_da, u_da, v_da, w_da, depths, adcp_depths
 
@@ -45,15 +53,29 @@ def test_process_chi_returns_dataset():
     temp_uncal, temp_cal, u, v, w, depths, adcp_depths = _make_synthetic_data()
     config = Config(chi_time_step=600, bottom_depth=200.0)
 
-    result, binned = process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config)
+    result, binned = process_chi(
+        temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config
+    )
 
     assert isinstance(result, xr.Dataset)
     expected_vars = {
-        "chi", "U", "mean_u", "mean_v", "mean_w",
-        "dtdz", "dtdx", "alpha", "gamma",
-        "unstab_prop", "unstab_count", "unstab_length",
-        "spectral_slope", "mean_t", "mean_t_uncal",
-        "avrg_lim_actual", "Pt",
+        "chi",
+        "U",
+        "mean_u",
+        "mean_v",
+        "mean_w",
+        "dtdz",
+        "dtdx",
+        "alpha",
+        "gamma",
+        "unstab_prop",
+        "unstab_count",
+        "unstab_length",
+        "spectral_slope",
+        "mean_t",
+        "mean_t_uncal",
+        "avrg_lim_actual",
+        "Pt",
     }
     assert expected_vars.issubset(set(result.data_vars))
     assert "depth" in result.coords
@@ -77,7 +99,9 @@ def test_process_chi_single_sensor():
     temp_uncal, temp_cal, u, v, w, depths, adcp_depths = _make_synthetic_data()
     config = Config(chi_time_step=600, bottom_depth=200.0)
 
-    result, _ = process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config, sensor_indices=[1])
+    result, _ = process_chi(
+        temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config, sensor_indices=[1]
+    )
 
     assert result.dims["depth"] == 1
     assert float(result.depth.values[0]) == 110.0
@@ -119,13 +143,29 @@ def test_process_chi_avrg_lim_adjustment():
 
     temp_uncal = temp_uncal.assign_coords(depth=depths_shallow)
     temp_cal = temp_cal.assign_coords(depth=depths_shallow)
-    u = u.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(z=adcp_depths_shallow)
-    v = v.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(z=adcp_depths_shallow)
-    w = w.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(z=adcp_depths_shallow)
+    u = u.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(
+        z=adcp_depths_shallow
+    )
+    v = v.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(
+        z=adcp_depths_shallow
+    )
+    w = w.isel(z=slice(0, len(adcp_depths_shallow))).assign_coords(
+        z=adcp_depths_shallow
+    )
 
     config = Config(chi_time_step=600, bottom_depth=150.0, U_ref=0.1)
 
-    result, _ = process_chi(temp_uncal, temp_cal, u, v, w, depths_shallow, adcp_depths_shallow, config, sensor_indices=[0])
+    result, _ = process_chi(
+        temp_uncal,
+        temp_cal,
+        u,
+        v,
+        w,
+        depths_shallow,
+        adcp_depths_shallow,
+        config,
+        sensor_indices=[0],
+    )
 
     assert result["avrg_lim_actual"].values[0, 0] == pytest.approx(0.01)
 
