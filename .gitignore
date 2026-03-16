@@ -7,6 +7,7 @@ build/
 # Matlab output files (not test fixtures)
 matlab_version/*.mat
 matlab_version/Spectra_Plots/
+matlab_version/output.mp4
 # Keep test fixtures tracked
 !tests/fixtures/*.mat
 .ruff_cache/
