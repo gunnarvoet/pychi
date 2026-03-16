@@ -100,6 +100,26 @@ pychi is built as three composable layers:
 
 4. **`chi.process_chi()`** — Orchestrator that loops over depths and time chunks, calls the above functions, handles NaN chunks, and returns xarray Datasets.
 
+## Porting Notes: Matlab `hanning` vs scipy `hann`
+
+Matlab's `hanning(N)` and scipy's `hann(N, sym=True)` produce different windows despite both being called "Hanning":
+
+| | Matlab `hanning(N)` | scipy `hann(N, sym=True)` |
+|---|---|---|
+| Formula | `0.5*(1 - cos(2*pi*n/(N+1)))`, n=1..N | `0.5*(1 - cos(2*pi*n/(N-1)))`, n=0..N-1 |
+| Endpoints | **Excludes** zeros (first/last values > 0) | **Includes** zeros (first and last values = 0) |
+
+For N=128, the maximum pointwise difference between the two normalized windows is ~0.02. In our case this caused a ~5% difference in spectral levels, which propagated through the chi formula (with its 3/2 exponent) to a ~0.7% error in chi — well beyond the 1e-6 tolerance required for Matlab-validated tests.
+
+The fix in `calc_chi` (`src/pychi/chi.py`) uses the Matlab formula directly instead of scipy:
+
+```python
+win = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(1, n_fft + 1) / (n_fft + 1)))
+win = win / np.sqrt(np.mean(win**2))
+```
+
+The standalone `csd_odas` function retains its own periodic Hanning window (matching `csd_odas.m`'s internal default), which is correct when called without an explicit window argument. The discrepancy only arose because `Calc_Chi_TChain_2.m` overrides that default by passing Matlab's `hanning(N)`.
+
 ## Input Data Requirements
 
 - **Temperature data:** Two xarray DataArrays with dims `(depth, time)` — one uncalibrated (for spectral analysis) and one calibrated (for gradients and physical parameters).
