@@ -16,7 +16,7 @@ requires = ["uv_build>=0.10.9,<0.12.0"]
 build-backend = "uv_build"
 
 [project.urls]
-Documentation = "https://gunnarvoet.github.io/pychi/pychi.html"
+Documentation = "https://gunnarvoet.net/pychi/pychi.html"
 
 [tool.uv.build-backend]
 module-root = "src"
