@@ -90,8 +90,8 @@ def test_process_chi_dimensions():
 
     result, _ = process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config)
 
-    assert result.dims["depth"] == 3
-    assert result.dims["time"] == 2
+    assert result.sizes["depth"] == 3
+    assert result.sizes["time"] == 2
 
 
 def test_process_chi_single_sensor():
@@ -103,7 +103,7 @@ def test_process_chi_single_sensor():
         temp_uncal, temp_cal, u, v, w, depths, adcp_depths, config, sensor_indices=[1]
     )
 
-    assert result.dims["depth"] == 1
+    assert result.sizes["depth"] == 1
     assert float(result.depth.values[0]) == 110.0
 
 
