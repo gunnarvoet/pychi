@@ -1,7 +1,7 @@
 """Chi (χ) dissipation rate calculation.
 
-Provides calc_chi (single-chunk computation, port of Calc_Chi_TChain_2.m)
-and process_chi (orchestrator over depths and time chunks).
+Provides calc_chi (single-chunk computation) and process_chi (orchestrator
+over depths and time chunks).
 """
 
 from __future__ import annotations
@@ -24,11 +24,11 @@ def calc_chi(
     sample_freq: float,
     config: Config,
 ) -> tuple[float, dict]:
-    """Compute chi for a single time chunk at a single depth.
+    r"""Compute chi for a single time chunk at a single depth.
 
-    Port of Calc_Chi_TChain_2.m. Computes the temperature power spectrum,
-    takes the median spectral level in the inertial subrange (scaled by
-    f^(5/3)), and applies the Batchelor/Osborn-Cox scaling.
+    Computes the temperature power spectrum, takes the median spectral level
+    in the inertial subrange (scaled by f^(5/3)), and applies the Osborn-Cox
+    scaling.
 
     Parameters
     ----------
@@ -53,12 +53,27 @@ def calc_chi(
         Dissipation rate estimate.
     diagnostics : dict
         Keys: Pt (spectrum), f (frequencies), U, mean_t, spectral_slope.
+
+    Notes
+    -----
+    Applies the inertial-subrange estimator for the temperature-variance
+    dissipation rate (Obukhov 1949; Corrsin 1951; Taylor 1938; Zhang & Moum
+    2010; Bluteau et al. 2013; see the package overview for the full derivation
+    and references),
+
+    $$\chi = \left[\left(\frac{g\alpha}{2\Gamma\,|\partial T/\partial z|}\right)^{1/3}\left(\frac{2\pi}{U}\right)^{2/3}\frac{\phi_T(\sigma)}{C_\theta}\right]^{3/2}$$
+
+    where $\phi_T(\sigma)$ is ``phi`` (the median of the $f^{5/3}$-scaled
+    spectrum over ``avrg_lim``), $U$ is ``U``, $|\partial T/\partial z|$ is
+    ``grad_T_mag``, $\Gamma$ is ``gamma``, $\alpha$ is ``alpha``,
+    $C_\theta \approx 0.4$ is the Obukhov-Corrsin constant (Sreenivasan 1996),
+    and $g = 9.81$.
     """
     n_fft = config.spectra_size
 
-    # Match Matlab Calc_Chi_TChain_2.m: hanning(N) normalized to unit RMS.
-    # Matlab's hanning(N) = 0.5*(1 - cos(2*pi*n/(N+1))), n=1..N
-    # (no zero endpoints, unlike scipy's hann).
+    # Hanning window normalized to unit RMS, defined as
+    #   0.5*(1 - cos(2*pi*n/(N+1))), n=1..N
+    # (nonzero endpoints, unlike scipy's hann).
     win = 0.5 * (1.0 - np.cos(2.0 * np.pi * np.arange(1, n_fft + 1) / (n_fft + 1)))
     win = win / np.sqrt(np.mean(win**2))
 
@@ -78,7 +93,7 @@ def calc_chi(
     avrg_lim = config.avrg_lim
     in_band = (f > avrg_lim[0]) & (f < avrg_lim[1])
 
-    # Chi formula — Matlab line 51:
+    # Chi formula:
     # chi = ((phi * (2*pi/U)^(2/3)) / 0.4
     #        * (g*alpha / (2*|grad_T_mag|*gamma))^(1/3)) ^ (3/2)
     g = 9.81

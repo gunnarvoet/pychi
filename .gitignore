@@ -11,3 +11,5 @@ matlab_version/output.mp4
 # Keep test fixtures tracked
 !tests/fixtures/*.mat
 .ruff_cache/
+# Generated documentation (built by pdoc, deployed via CI)
+docs/

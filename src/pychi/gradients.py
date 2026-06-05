@@ -1,7 +1,6 @@
 """Temperature gradient computation.
 
-Provides vertical (dT/dz) and horizontal (dT/dx) gradient functions
-matching the Matlab reference implementation.
+Provides vertical (dT/dz) and horizontal (dT/dx) gradient functions.
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ def vertical_gradient(
 ) -> tuple[float, NDArray[np.floating]]:
     """Compute vertical temperature gradient dT/dz for a given sensor.
 
-    Uses finite differences matching Matlab lines 137-152:
+    Uses finite differences:
     - Top sensor (index 0): (T[0] - T[1]) / (depth[0] - depth[1])
     - Bottom sensor (index N-1): (T[N-2] - T[N-1]) / (depth[N-2] - depth[N-1])
     - Interior sensors: centered (T[i-1] - T[i+1]) / (depth[i-1] - depth[i+1])
@@ -61,10 +60,7 @@ def horizontal_gradient(
     chunk_duration_s: float,
     U: float,
 ) -> float:
-    """Compute horizontal temperature gradient dT/dx via frozen-field hypothesis.
-
-    Matches Matlab line 154:
-    dtdx = ((temp_in_cal(end) - temp_in_cal(1)) / (chi_time_step * 24*60*60)) / U_in
+    r"""Compute horizontal temperature gradient dT/dx via frozen-field hypothesis.
 
     Parameters
     ----------
@@ -79,5 +75,15 @@ def horizontal_gradient(
     -------
     dtdx : float
         Horizontal temperature gradient estimate.
+
+    Notes
+    -----
+    Uses Taylor's frozen-field hypothesis to convert the temporal gradient
+    into a horizontal (along-flow) gradient,
+
+    $$\frac{\partial T}{\partial x} = \frac{1}{U}\,\frac{\partial T}{\partial t}$$
+
+    evaluated here as the chunk-endpoint temperature difference divided by the
+    chunk duration and $U$.
     """
     return float((temp_cal_chunk[-1] - temp_cal_chunk[0]) / (chunk_duration_s * U))

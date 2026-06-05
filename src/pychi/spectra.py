@@ -1,6 +1,6 @@
 """Spectral estimation functions.
 
-Provides a faithful port of csd_odas.m (auto-spectrum only) and a
+Provides csd_odas (auto-spectrum via Welch's method) and a
 scipy.signal.welch wrapper for cross-validation.
 """
 
@@ -22,7 +22,7 @@ def csd_odas(
 ) -> tuple[NDArray[np.floating], NDArray[np.floating]]:
     """Compute the auto-spectrum of a real signal using Welch's method.
 
-    Faithful port of csd_odas.m (auto-spectrum path only).
+    Computes the one-sided auto-spectral density of a real-valued signal.
 
     Parameters
     ----------
@@ -46,6 +46,11 @@ def csd_odas(
         Auto-spectral density (n_fft // 2 + 1).
     f : 1D array
         Frequency vector in Hz.
+
+    Notes
+    -----
+    Normalized so that the integral of the spectrum from 0 to the Nyquist
+    frequency equals the variance of the input signal.
     """
     x = np.asarray(x, dtype=float).ravel()
 
@@ -57,9 +62,8 @@ def csd_odas(
     if overlap is None:
         overlap = n_fft // 2
 
-    # Window — use exact Matlab csd_odas.m formula (lines 131-132):
-    #   Window = 1 + cos(pi*(-1 + 2*(0:n_fft-1)'/n_fft))
-    #   Window = Window / sqrt(mean(Window.^2))
+    # Default window: a Hanning window normalized to unit RMS,
+    #   w = 1 + cos(pi*(-1 + 2*n/n_fft)),  then  w /= sqrt(mean(w**2))
     if window is None:
         window = 1.0 + np.cos(np.pi * (-1.0 + 2.0 * np.arange(n_fft) / n_fft))
         window = window / np.sqrt(np.mean(window**2))

@@ -2,13 +2,13 @@
 
 Estimate the turbulent temperature variance dissipation rate (χ, chi) from oceanographic moored time series.
 
-pychi is a Python port of a Matlab reference implementation. It computes χ from moored T-chain and ADCP data using spectral analysis in the inertial subrange with the Batchelor/Osborn-Cox scaling.
+pychi is a Python port of a Matlab reference implementation. It computes χ from moored T-chain and ADCP data using spectral analysis in the inertial subrange with the Osborn-Cox scaling.
 
 ## Installation
 
 ```bash
 # Clone and install with uv
-git clone <repo-url>
+git clone git@github.com:gunnarvoet/pychi.git
 cd pychi
 uv sync
 ```
@@ -96,7 +96,7 @@ pychi is built as three composable layers:
 
 2. **`gradients.vertical_gradient()` / `horizontal_gradient()`** — Temperature gradient computation using finite differences (vertical) and the frozen-field hypothesis (horizontal).
 
-3. **`chi.calc_chi()`** — Single-chunk chi computation: spectrum → inertial subrange median → Batchelor/Osborn-Cox formula.
+3. **`chi.calc_chi()`** — Single-chunk chi computation: spectrum → inertial subrange median → Osborn-Cox formula.
 
 4. **`chi.process_chi()`** — Orchestrator that loops over depths and time chunks, calls the above functions, handles NaN chunks, and returns xarray Datasets.
 

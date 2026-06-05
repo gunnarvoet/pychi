@@ -38,7 +38,7 @@ Run in Matlab from the `matlab_version/` directory after pointing paths to data.
 3. **Per-chunk computation** (`Calc_Chi_TChain_2.m`):
    - Computes temperature power spectrum via `csd_odas` (Welch's method with Hanning window, 50% overlap, segment length 2⁷=128 samples)
    - Multiplies spectrum by f^(5/3) to flatten the inertial subrange
-   - Takes median spectral level in a frequency band (`avrg_lim`) and applies the Batchelor/Osborn-Cox scaling to estimate χ
+   - Takes median spectral level in a frequency band (`avrg_lim`) and applies the Osborn-Cox scaling to estimate χ
    - The χ formula uses: horizontal velocity magnitude U, thermal expansion coefficient α (from `sw_alpha`), vertical temperature gradient dT/dz, horizontal gradient dT/dx (frozen-field hypothesis), mixing efficiency γ=0.2, and gravity g=9.81
 
 4. **Diagnostics** — Spectral slopes are fitted in the inertial subrange and compared to the theoretical −5/3. Spectra are binned by log₁₀(χ) and averaged for QC plots.
