@@ -195,6 +195,11 @@ Construct a `Config` with `Config()` for the defaults, override individual
 fields directly (`Config(chi_time_step=600, bottom_depth=200.0)`), or load a
 custom YAML file with `Config.from_yaml("my_config.yml")`. The sampling
 frequency is inferred automatically from the input time coordinate.
+
+## Acknowledgments
+
+pychi is a Python port of the original Matlab implementation, which was kindly
+shared by Carl Spingys.
 """
 
 from pychi.config import Config

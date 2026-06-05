@@ -141,3 +141,7 @@ To generate Matlab test fixtures, run `scripts/export_matlab_fixtures.m` in Matl
 
 - numpy, scipy, xarray, gsw, pyyaml
 - Dev: pytest, ruff
+
+## Acknowledgments
+
+pychi is a Python port of the original Matlab implementation, which was kindly shared by Carl Spingys.
