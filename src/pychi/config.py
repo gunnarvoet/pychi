@@ -66,6 +66,33 @@ class Config:
     ``"full"`` uses $\sqrt{(\partial T/\partial z)^2 + (\partial T/\partial x)^2}$,
     ``"vertical"`` uses $|\partial T/\partial z|$ only."""
 
+    gradient_temperature: str = "in_situ"
+    r"""Which temperature the vertical gradient is taken from: ``"in_situ"``
+    differences the calibrated temperature as given (reference behavior);
+    ``"potential"`` first converts it to potential temperature referenced to
+    the mean pressure of the chain, which removes the adiabatic lapse rate
+    (about $10^{-4}$ °C m$^{-1}$ at abyssal pressures). Use ``"potential"``
+    wherever the stratification is weak enough for the lapse rate to matter."""
+
+    min_speed: float | None = None
+    r"""Speed floor in m/s. Chunks whose advection speed $U$ is below it get
+    NaN $\chi$, since $\chi \propto U^{-1}$ and Taylor's hypothesis both fail
+    as $U \to 0$. ``None`` (default) applies no floor. $U$ and the gradients
+    are still reported for masked chunks."""
+
+    min_gradient: float | None = None
+    r"""Gradient floor in °C m$^{-1}$. Chunks whose temperature-gradient
+    magnitude (as selected by `gradient_mode`) is below it get NaN $\chi$.
+    $\chi \propto |\partial T/\partial z|^{-1/2}$ diverges as the gradient
+    vanishes, and the closure through $N^2$ has no meaning there. ``None``
+    (default) applies no floor."""
+
+    require_stable: bool = False
+    r"""If True, chunks whose mean vertical gradient is not stable (temperature
+    not decreasing with depth, ``dtdz >= 0``) get NaN $\chi$. Only meaningful
+    with ``gradient_temperature="potential"``: in-situ temperature can rise
+    with depth in stable water."""
+
     @classmethod
     def from_yaml(cls, path: str | Path) -> Config:
         """Load configuration from a YAML file.
@@ -96,6 +123,10 @@ class Config:
                 "bottom_depth",
                 "U_ref",
                 "gradient_mode",
+                "gradient_temperature",
+                "min_speed",
+                "min_gradient",
+                "require_stable",
             ):
                 if key in raw["physics"]:
                     kwargs[key] = raw["physics"][key]

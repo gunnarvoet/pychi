@@ -46,6 +46,22 @@ horizontal gradient $\partial T/\partial x$ comes from the same frozen-field
 relation ($\partial T/\partial x = U^{-1}\,\partial T/\partial t$);
 ``gradient_mode="vertical"`` uses $|\partial T/\partial z|$ alone.
 
+The vertical gradient is taken from in-situ temperature by default, as in the
+reference implementation. In-situ temperature carries the adiabatic lapse
+rate, about $10^{-4}$ °C m$^{-1}$ at abyssal pressures, which is harmless in
+strong stratification and dominates the gradient in weak stratification.
+``gradient_temperature="potential"`` converts to potential temperature first
+and should be used wherever the two could differ. The estimator takes the
+magnitude of the gradient, so check the sign of the returned ``dtdz``
+(negative is stable, depth positive down) before trusting $\chi$ in weakly
+stratified water.
+
+Since $\chi \propto U^{-1}$, weak flow inflates both $\chi$ and its error, and
+Taylor's hypothesis fails as $U \to 0$. Setting ``min_speed`` returns NaN
+$\chi$ for chunks with $U$ below that floor. ``min_gradient`` does the same
+for chunks whose gradient magnitude is too small to resolve, and
+``require_stable`` for chunks whose mean vertical gradient is not stable.
+
 ### Symbols
 
 | Symbol | Meaning | Value / source in code |

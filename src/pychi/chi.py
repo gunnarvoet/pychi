@@ -6,6 +6,8 @@ over depths and time chunks).
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 from numpy.typing import NDArray
 import xarray as xr
@@ -155,7 +157,9 @@ def process_chi(
     temp_uncal : DataArray (depth, time)
         Uncalibrated T-chain temperatures.
     temp_cal : DataArray (depth, time)
-        Calibrated T-chain temperatures.
+        Calibrated in-situ T-chain temperatures. With
+        ``config.gradient_temperature="potential"`` they are converted to
+        potential temperature before the vertical gradient is taken.
     u_velocity, v_velocity, w_velocity : DataArray (time, z)
         ADCP velocity components.
     depths : 1D array
@@ -220,6 +224,20 @@ def process_chi(
     if sensor_indices is None:
         sensor_indices = list(range(len(depths)))
 
+    # Temperature the vertical gradient is taken from
+    if config.gradient_temperature == "in_situ":
+        temp_grad = temp_cal.values
+    elif config.gradient_temperature == "potential":
+        p_all = gsw.p_from_z(-depths, config.latitude)
+        p_ref = float(np.mean(p_all))
+        SA_ref = gsw.SA_from_SP(config.salinity, p_ref, 0, config.latitude)
+        temp_grad = gsw.pt_from_t(SA_ref, temp_cal.values, p_all[:, None], p_ref)
+    else:
+        raise ValueError(
+            "gradient_temperature must be 'in_situ' or 'potential', "
+            f"got '{config.gradient_temperature}'"
+        )
+
     proc_depths = depths[sensor_indices]
     n_depths = len(sensor_indices)
     n_freq = config.spectra_size // 2 + 1
@@ -273,7 +291,7 @@ def process_chi(
 
             # Temperature
             temp_uncal_chunk = temp_uncal.values[si, t_mask]
-            temp_cal_chunk = temp_cal.values[:, t_mask]
+            temp_cal_chunk = temp_grad[:, t_mask]
             temp_cal_sensor = temp_cal.values[si, t_mask]
 
             mean_t_arr[di, jj] = float(np.nanmean(temp_cal_sensor))
@@ -310,7 +328,27 @@ def process_chi(
             # NaN check
             has_nan = np.any(np.isnan(temp_uncal_chunk))
 
-            if has_nan:
+            # csd_odas needs more than two FFT segments worth of samples.
+            # A short trailing window (or any window below this length) cannot
+            # support a spectrum, so treat it like a NaN chunk: leave chi NaN.
+            too_short = len(temp_uncal_chunk) < 2 * config.spectra_size
+
+            # Speed floor: chi scales as 1/U and Taylor's hypothesis needs
+            # advection, so chunks below the floor are left NaN.
+            too_slow = config.min_speed is not None and U_val < config.min_speed
+
+            # Gradient checks: chi scales as |gradient|^(-1/2), and the N2
+            # closure needs a stable, resolved gradient.
+            if config.gradient_mode == "full":
+                grad_T_mag = np.sqrt(dtdz_mean**2 + dtdx_val**2)
+            else:
+                grad_T_mag = abs(dtdz_mean)
+            too_weak = (
+                config.min_gradient is not None and grad_T_mag < config.min_gradient
+            )
+            unstable = config.require_stable and not dtdz_mean < 0
+
+            if has_nan or too_short or too_slow or too_weak or unstable:
                 chi_arr[di, jj] = np.nan
                 gamma_arr[di, jj] = np.nan
                 mean_t_uncal_arr[di, jj] = np.nan
@@ -332,22 +370,9 @@ def process_chi(
                     np.interp(depth_val, adcp_depths, mean_w_profile)
                 )
 
-                chunk_config = Config(
-                    spectra_size=config.spectra_size,
-                    avrg_lim=[avrg_lim_lo, config.avrg_lim[1]],
-                    chi_time_step=config.chi_time_step,
-                    gamma=config.gamma,
-                    salinity=config.salinity,
-                    latitude=config.latitude,
-                    bottom_depth=config.bottom_depth,
-                    U_ref=config.U_ref,
-                    chi_spectra_bin_bounds=config.chi_spectra_bin_bounds,
+                chunk_config = replace(
+                    config, avrg_lim=[avrg_lim_lo, config.avrg_lim[1]]
                 )
-
-                if config.gradient_mode == "full":
-                    grad_T_mag = np.sqrt(dtdz_mean**2 + dtdx_val**2)
-                else:
-                    grad_T_mag = abs(dtdz_mean)
 
                 chi_val, diag = calc_chi(
                     temp_uncal_chunk,

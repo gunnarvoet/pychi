@@ -41,3 +41,17 @@ def test_config_from_yaml_missing_file():
     """Config.from_yaml raises FileNotFoundError for missing file."""
     with pytest.raises(FileNotFoundError):
         Config.from_yaml("/nonexistent/path.yml")
+
+
+def test_config_new_option_defaults():
+    config = Config()
+    assert config.gradient_temperature == "in_situ"
+    assert config.min_speed is None
+
+
+def test_config_from_yaml_gradient_temperature_and_min_speed(tmp_path):
+    path = tmp_path / "cfg.yml"
+    path.write_text("physics:\n  gradient_temperature: potential\n  min_speed: 0.02\n")
+    config = Config.from_yaml(path)
+    assert config.gradient_temperature == "potential"
+    assert config.min_speed == 0.02

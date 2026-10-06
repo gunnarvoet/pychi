@@ -13,3 +13,7 @@ physics:
   bottom_depth: 1466.0      # Meters (for height-above-bottom)
   U_ref: 0.1               # Representative velocity [m/s] (for u/h low-freq cutoff)
   gradient_mode: "full"     # "full" = sqrt(dtdz^2 + dtdx^2), "vertical" = |dtdz| only
+  gradient_temperature: "in_situ"  # "in_situ" or "potential" (removes the adiabatic lapse rate)
+  min_speed: null           # Speed floor [m/s]; chunks with U below it get NaN chi
+  min_gradient: null        # Gradient floor [degC/m]; chunks below it get NaN chi
+  require_stable: false     # NaN chi where dtdz >= 0 (use with gradient_temperature "potential")
