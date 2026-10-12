@@ -61,6 +61,11 @@ class Config:
     r"""Representative horizontal velocity in m/s for the $U/h$ low-frequency
     cutoff, which excludes eddies suppressed by proximity to the boundary."""
 
+    lowcut_speed: str = "reference"
+    r"""Speed in the $U/h$ low-frequency cutoff. ``"reference"`` uses the
+    fixed `U_ref`. ``"measured"`` uses the advection speed $U$ of each chunk,
+    and `U_ref` where that speed is not finite."""
+
     gradient_mode: str = "full"
     r"""Which temperature-gradient magnitude enters the estimator:
     ``"full"`` uses $\sqrt{(\partial T/\partial z)^2 + (\partial T/\partial x)^2}$,
@@ -122,6 +127,7 @@ class Config:
                 "latitude",
                 "bottom_depth",
                 "U_ref",
+                "lowcut_speed",
                 "gradient_mode",
                 "gradient_temperature",
                 "min_speed",

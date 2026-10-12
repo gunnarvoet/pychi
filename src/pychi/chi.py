@@ -322,7 +322,15 @@ def process_chi(
 
             # Adjust low-freq limit
             hab = config.bottom_depth - depth_val
-            avrg_lim_lo = max(config.avrg_lim[0], config.U_ref / hab)
+            if config.lowcut_speed not in ("reference", "measured"):
+                raise ValueError(
+                    f"lowcut_speed={config.lowcut_speed!r} must be 'reference' or 'measured'"
+                )
+            if config.lowcut_speed == "measured" and np.isfinite(U_val):
+                u_lo = U_val
+            else:
+                u_lo = config.U_ref
+            avrg_lim_lo = max(config.avrg_lim[0], u_lo / hab)
             avrg_lim_actual_arr[di, jj] = avrg_lim_lo
 
             # NaN check

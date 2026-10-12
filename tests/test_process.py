@@ -355,3 +355,25 @@ def test_process_chi_require_stable_masks_unstable_gradients():
     assert np.all(np.isnan(r_insitu["chi"].values))
     assert np.all(r_pot["dtdz"].values < 0)
     assert np.all(np.isfinite(r_pot["chi"].values))
+
+
+def test_lowcut_speed_measured_uses_the_chunk_speed():
+    temp_uncal, temp_cal, u, v, w, depths, adcp_depths = _make_synthetic_data()
+    ref = Config(chi_time_step=600, bottom_depth=125.0)
+    meas = Config(chi_time_step=600, bottom_depth=125.0, lowcut_speed="measured")
+    r_ref, _ = process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths, ref)
+    r_meas, _ = process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths, meas)
+    hab = 125.0 - np.asarray(depths)[:, None]  # 25, 15, 5 m
+    lim_ref = r_ref.avrg_lim_actual.transpose("depth", "time").values
+    lim_meas = r_meas.avrg_lim_actual.transpose("depth", "time").values
+    U = r_meas.U.transpose("depth", "time").values
+    np.testing.assert_allclose(lim_ref, np.broadcast_to(np.maximum(0.008, 0.1 / hab), lim_ref.shape))
+    np.testing.assert_allclose(lim_meas, np.maximum(0.008, U / hab))
+    assert (lim_meas[-1] > lim_ref[-1]).all()  # the synthetic speed is about 0.22 m/s
+
+
+def test_lowcut_speed_rejects_an_unknown_value():
+    temp_uncal, temp_cal, u, v, w, depths, adcp_depths = _make_synthetic_data()
+    with pytest.raises(ValueError, match="lowcut_speed"):
+        process_chi(temp_uncal, temp_cal, u, v, w, depths, adcp_depths,
+                    Config(chi_time_step=600, bottom_depth=125.0, lowcut_speed="fastest"))
